@@ -1,0 +1,39 @@
+
+
+MATING POOL? CROSSOVER?
+
+Global currentSmallest
+
+
+input: popSize(class atribute), interactionsNum, mutationProb
+output: smallest path <chromossome> -GLOBAL?
+    requires: 1000 maxInteractions, 2 reprdctions types, 2-5 pages report
+
+2D array is dist table.
+fitness (float/ long double) is 1/dist 
+prob is specific/total fitness 
+a list/pop. of 10 number array (chromossomes/cityRoutes) with inputable size
+singleElitism: top ranking harem. --TOO VICIOUS W/ FTNESS PROPORTNT?(isn't trnmnt)
+??Fitness proportionate:rndm (0,1)
+??Tournament sel:
+mutation is must w/ tiny pops
+
+chromossome : genes[9], fitness, prob -WILL RANDOM MUTATE, DO NOT MIX GENE/DIST
+population: : chromossomes, size -pop
+
+
+
+
+
+
+
+
+
+
+
+
+
+prob calc: pop fitness sum by individual fiteness stored into ranks and higher places given to smaller fitness
+    fitness is higher for desired individuals, do smaller dist = higher acceptation in fitness module
+
+
