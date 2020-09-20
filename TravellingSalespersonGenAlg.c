@@ -46,7 +46,7 @@ int distances [10][10] = {
                             } ;
 
 //creates given number of random chromossomes
-chromossome* initiatePopulation(population *start);
+void initiatePopulation(population *start);
 
 //calculates specific fitness relative to the sum of all path lengths
 //recursive, sum on the way, fitness on the back (specific/total length)
@@ -86,7 +86,7 @@ int SHORTESTPATH = 100000;
         }
 
 
-        chromossome* allocateCromossome( );
+        void allocateCromossome( chromossome** new );
         void destroyCromossome();
 
         // An utility function to swap to integers
@@ -106,7 +106,7 @@ int SHORTESTPATH = 100000;
 void setStandardChromossome(chromossome* chromossome, int key);
 
 // Utility function to alocate chromossomes
-        chromossome* allocateCromossome(chromossome** new){
+        void allocateCromossome(chromossome** new){
 
             (*new) = (chromossome*)malloc(sizeof(chromossome)) ;
 
@@ -143,8 +143,8 @@ void copyPath(chromossome* copy, chromossome* copied, int fromIndex, int toIndex
     
 }
 
-chromossome* initiatePopulation (population *start);
-chromossome* initiatePopulation (population *start){
+void initiatePopulation (population *start);
+void initiatePopulation (population *start){
 
     chromossome** chromossome ;
     int i, j, chromossomeKey, size = 10;
@@ -155,9 +155,11 @@ chromossome* initiatePopulation (population *start){
     // result each time we run this program
     srand ( time(NULL) );
 
-    start->currentGeneration = malloc(sizeof(int) * start->populationSize);
+    start->currentGeneration = malloc(sizeof(*chromossome) * start->populationSize);
+    if ( start->currentGeneration == NULL)    
+        printf("Erro na alocação de memória.");
 
-     chromossome = (start->currentGeneration);
+    chromossome = (start->currentGeneration);
     //Alocates given number of chromossomes
     for ( chromossomeKey = 0; chromossomeKey < start->populationSize; chromossomeKey++)
     {
@@ -249,22 +251,7 @@ void freeMemory( population* population) {
 
     free ( population->currentGeneration );
 }
-// void setProbabilities(population* population);
-// void setProbabilities(population* population){
 
-//     int fitnessSum = 0;
-//     chromossome* aux = population->currentGeneration;
-
-//     for (int i = 0; i < population->populationSize; i++)
-//     {
-//         fitnessSum += population->currentGeneration[i]->fitness;
-//     }
-
-//     for (int i = 0; i < population->populationSize; i++)
-//         population->currentGeneration[i]->probability = population->currentGeneration[i]->fitness / fitnessSum;
-// }
-
-//WORKS!
 void reverseArray(int* arr, int start, int end)
 {
     int temp;
@@ -288,9 +275,6 @@ void crossover(chromossome* parent1, chromossome* parent2){
 void mutation( chromossome** chromossome,int opt);
 void mutation( chromossome** chromossome,int opt){
     int indexA, indexB;
-
-
-
     indexA = indexB;
 
 
@@ -305,7 +289,7 @@ void mutation( chromossome** chromossome,int opt){
         indexA = randomInt( 0, 9);
         indexB = randomInt( 0, 9);
 
-        swapPlaces( &(*chromossome)->path[indexA], &(*chromossome)->path[indexB] );
+        swapPlaces( &((*chromossome)->path[indexA]), &((*chromossome)->path[indexB]) );
 
         break;
     case 3:
@@ -331,10 +315,11 @@ void mutation( chromossome** chromossome,int opt){
 //with permutations of desirable ones
 
 //check if new values are according, fitness, NEXT CHROMOSSOME
-void  reformTheUnfitting( population* population );
-void  reformTheUnfitting( population* population ){
+void  rehabilitation( population* population );
+void  rehabilitation( population* population ){
+
+
     chromossome** aux = population->currentGeneration;
-    chromossome newChromossome;
     chromossome* keepInLine;
 
 
@@ -343,13 +328,19 @@ void  reformTheUnfitting( population* population ){
         
         if ( (*aux)->fitness <= (ANSWER->fitness /2) )
         {
+            if ( *aux == NULL)
+            {
+                return;
+            }
+            
             printf("\n                In Need Of Correction\n");
             
-            setStandardChromossome( &newChromossome, (*aux)->chromossomeKey );
-            copyPath( &newChromossome, ANSWER, 0, 9);
-            newChromossome.next = (*aux)->next;
+            keepInLine = (*aux)->next;
+            setStandardChromossome( *aux, (*aux)->chromossomeKey );
+            copyPath( *aux, ANSWER, 0, 9);
             
-            *aux = &newChromossome; //ALL previous rehabs are LOST.Many equal chromossomes.
+            
+            (*aux)->next = keepInLine; //ALL previous rehabs are LOST.Many equal chromossomes.
             mutation( aux, randomInt( 0, 4));
 
             printChromossome( *aux );
@@ -373,42 +364,103 @@ void  reformTheUnfitting( population* population ){
 
 void newGeneration( population* population);
 void newGeneration( population* population){
+    chromossome** aux;
+    aux = population->currentGeneration;
+
+    rehabilitation( population );
+    // turns remarkably undesirable idivuduals into mutated copies of ANSWER
 
 //sets fitness and probability
     evaluateFitnessAndProbability( *population->currentGeneration, 0 );
     // setProbabilities( population);
+    
+    for (int i = 0; i < population->populationSize; i++)
+    {
+        mutation( aux, randomInt(0,4));
+        aux = &(*aux)->next;
+    }
+    
 
-    reformTheUnfitting( population );
-    // fitnessSelection ()
+
 }
 
+int calculateLength( int *path);
+int calculateLength( int *path){
+    int length = 0;
+    int fromCity;
+    int toCity;
 
+            for (int i = 0; i < 9; i ++ )
+        {
+            fromCity = path[i] ;
+            toCity = path[i + 1] ;
+            length += distances [ fromCity ] [ toCity ] ;
 
-void main ()
+        }
+        //considers return to original city
+        fromCity = path[0];
+        length += distances [toCity] [fromCity];
+       
+        return length;
+}
+
+int main ()
 {
     population population;
     ANSWER = malloc(sizeof(chromossome));
 
-    population.populationSize = 3000;
+    population.populationSize = 20;
     // population.populationSize = 79999;
 // for (int i = 0; i < 10; i++)
 // {                            //FOR BRUTE RANDOM ASSESSING
 //         initiatePopulation( &population);
 // }
 
-    initiatePopulation( &population);
+
+    
+    int  aTest[ 10 ] = { 8, 1, 5, 3, 4, 6, 9, 7, 2, 0 };
+    int aTestq[ 10 ] = { 6, 4, 3, 5, 1, 8, 0, 2, 7, 9 };
+    int aTestw[ 10 ] = { 7, 9, 6, 4, 3, 5, 1, 8, 0, 2 };
+    int aTeste[ 10 ] = { 2, 0, 8, 1, 5, 3, 4, 6, 9, 7 };
+    int aTestr[ 10 ] = { 1, 8, 0, 2, 7, 9, 6, 4, 3, 5 };
+    int aTestt[ 10 ] = { 3, 4, 6, 9, 7, 2, 0, 8, 1, 5 };
+    int aTesty[ 10 ] = { 8, 1, 5, 3, 4, 6, 9, 7, 2, 0 };
+    int aTestu[ 10 ] = { 4, 6, 9, 7, 2, 0, 8, 1, 5, 3 };
+    int aTesti[ 10 ] = { 8, 0, 2, 7, 9, 6, 4, 3, 5, 1 };
+    printf(" %d \n", calculateLength(aTest ) );
+    printf(" %d \n", calculateLength(aTestq)  );
+    printf(" %d \n", calculateLength(aTestw)  );
+    printf(" %d \n", calculateLength(aTeste)  );
+    printf(" %d \n", calculateLength(aTestr)  );
+    printf(" %d \n", calculateLength(aTestt)  );
+    printf(" %d \n", calculateLength(aTesty)  );
+    printf(" %d \n", calculateLength(aTestu)  );
+    printf(" %d \n", calculateLength(aTesti)  );
+    
 
 
 
-    newGeneration( &population);
 
 
-    // printf("            @@ ANSWER %f \n", rand()/(double)RAND_MAX);
-    printf("         SHORTEST PATH: ");
-    printChromossome(ANSWER);
+    // initiatePopulation( &population);
 
-    freeMemory(&population);
+    // for (int i = 0; i < 1000; i++)
+    // {
+    //        evaluateFitnessAndProbability( *(population.currentGeneration), 0 );
+
+    // newGeneration( &population);
+
+    // }
+    
 
 
-    return;
+    // // printf("            @@ ANSWER %f \n", rand()/(double)RAND_MAX);
+    // printf("         SHORTEST PATH: ");
+    // printChromossome(ANSWER);
+
+    // freeMemory(&population);
+    // free(ANSWER);
+
+
+    return 0;
 }
