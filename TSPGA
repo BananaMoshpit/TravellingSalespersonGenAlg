@@ -37,3 +37,33 @@ prob calc: pop fitness sum by individual fiteness stored into ranks and higher p
     fitness is higher for desired individuals, do smaller dist = higher acceptation in fitness module
 
 
+
+
+
+p { population[1], population[2], population[3], population[4], population[5], population[6]}
+
+ p chromossome
+ p printArray(chromossome)
+ p population[0]
+
+(gdb) p { &population[1], &population[2], &population[3], &population[4], &population[5], &population[6]}
+$8 = {0x555555757268, 0x555555757270, 0x555555757278, 0x555555757280, 
+  0x555555757288, 0x555555757290}
+
+
+
+
+p { &aux, aux, &arr, arr}
+p printArray( , arraySize)
+p printArray( population[i], arraySize)
+WISH: 9 6 4 3 5 1 8 0 2 7 9 : 35+
+
+1 5 3 4 6 9 0 7 2 8 
+
+6 9 7 2 0 8 1 5 3 4 : 35+6+3+3+8+8+11+25+19
+
+1 5 8 3 9 2 6 4 0 7 : 11+33+9+10+8
+
+
+
+
