@@ -55,9 +55,9 @@ void initiatePopulation(population *start);
 // prints chromossome as a path between cities
 void printPath(chromossome* path);
 
+int calculateLength( int *path);
 
 chromossome* ANSWER = NULL;
-int SHORTESTPATH = 100000;
 
 
 
@@ -181,6 +181,7 @@ void initiatePopulation (population *start){
         chromossome = &(*chromossome)->next;    /*CAN USE INDEX*/
     }
 
+
     printf(">>Population initiated \n");
 
 }
@@ -190,28 +191,13 @@ void initiatePopulation (population *start){
 // sets idividual probability on the way back
 long double evaluateFitnessAndProbability(chromossome* chromossome, long double fitnessSum);
 long double evaluateFitnessAndProbability(chromossome* chromossome, long double fitnessSum){
-    double length = 0;
-    int fromCity;
-    int toCity;
 
 printf(">>Evaluating fitness/probability of:\n");
     if (chromossome != NULL){
 
+        chromossome->length = calculateLength( chromossome->path );       
 
-//calculates length of chromossome
-        for (int i = 0; i < 9; i ++ )
-        {
-            fromCity = chromossome->path[i] ;
-            toCity = chromossome->path[i + 1] ;
-            length += distances [ fromCity ] [ toCity ] ;
-
-        }
-        //considers return to original city
-        fromCity = chromossome->path[0];
-        length += distances [toCity] [fromCity];
-        chromossome->length = length;           //needless?
-
-        chromossome->fitness = 1000 / length;
+        chromossome->fitness = 1000 /chromossome->length ;
         fitnessSum += chromossome->fitness;
 
         fitnessSum = evaluateFitnessAndProbability( chromossome->next, fitnessSum );
@@ -220,8 +206,8 @@ printf(">>Evaluating fitness/probability of:\n");
             chromossome->probability = chromossome->fitness / fitnessSum;
 
 //chromossome is marked as answer if it's the smallest one
-        if ( length < SHORTESTPATH ) {
-            SHORTESTPATH = length;
+        if ( chromossome->length < ANSWER->length || ANSWER->length == 0) {
+            ANSWER->length = chromossome->length;
             *ANSWER = *chromossome;
 
         }
@@ -340,24 +326,16 @@ void  rehabilitation( population* population ){
             copyPath( *aux, ANSWER, 0, 9);
             
             
-            (*aux)->next = keepInLine; //ALL previous rehabs are LOST.Many equal chromossomes.
+            (*aux)->next = keepInLine; 
             mutation( aux, randomInt( 0, 4));
 
             printChromossome( *aux );
         }
 
         aux = &(*aux)->next;
-        // printf("                NO Need Of Correction");
     }
 
-                                    //  ERROR IF ANSWER == NUL !!
-    // printf("                    DIE: ");
-    // printArray( (*population->currentGeneration)->path);
-    // printf("                    FOR: ");
-    // printArray( ANSWER->path);
 
-    // evaluateFitnessAndProbability( *population->currentGeneration, 0);
-    // printChromossome( *aux );
     printf("reformed");
 
 }
@@ -374,7 +352,7 @@ void newGeneration( population* population){
     evaluateFitnessAndProbability( *population->currentGeneration, 0 );
     // setProbabilities( population);
     
-    for (int i = 0; i < population->populationSize; i++)
+    for (int i = 0; i < population->populationSize / 2; i++)
     {
         mutation( aux, randomInt(0,4));
         aux = &(*aux)->next;
@@ -384,7 +362,7 @@ void newGeneration( population* population){
 
 }
 
-int calculateLength( int *path);
+
 int calculateLength( int *path){
     int length = 0;
     int fromCity;
@@ -407,9 +385,9 @@ int calculateLength( int *path){
 int main ()
 {
     population population;
-    ANSWER = malloc(sizeof(chromossome));
+    allocateCromossome( &ANSWER );
 
-    population.populationSize = 20;
+    population.populationSize = 10;
     // population.populationSize = 79999;
 // for (int i = 0; i < 10; i++)
 // {                            //FOR BRUTE RANDOM ASSESSING
@@ -418,48 +396,53 @@ int main ()
 
 
     
-    int  aTest[ 10 ] = { 8, 1, 5, 3, 4, 6, 9, 7, 2, 0 };
-    int aTestq[ 10 ] = { 6, 4, 3, 5, 1, 8, 0, 2, 7, 9 };
-    int aTestw[ 10 ] = { 7, 9, 6, 4, 3, 5, 1, 8, 0, 2 };
-    int aTeste[ 10 ] = { 2, 0, 8, 1, 5, 3, 4, 6, 9, 7 };
-    int aTestr[ 10 ] = { 1, 8, 0, 2, 7, 9, 6, 4, 3, 5 };
-    int aTestt[ 10 ] = { 3, 4, 6, 9, 7, 2, 0, 8, 1, 5 };
-    int aTesty[ 10 ] = { 8, 1, 5, 3, 4, 6, 9, 7, 2, 0 };
-    int aTestu[ 10 ] = { 4, 6, 9, 7, 2, 0, 8, 1, 5, 3 };
-    int aTesti[ 10 ] = { 8, 0, 2, 7, 9, 6, 4, 3, 5, 1 };
-    printf(" %d \n", calculateLength(aTest ) );
-    printf(" %d \n", calculateLength(aTestq)  );
-    printf(" %d \n", calculateLength(aTestw)  );
-    printf(" %d \n", calculateLength(aTeste)  );
-    printf(" %d \n", calculateLength(aTestr)  );
-    printf(" %d \n", calculateLength(aTestt)  );
-    printf(" %d \n", calculateLength(aTesty)  );
-    printf(" %d \n", calculateLength(aTestu)  );
-    printf(" %d \n", calculateLength(aTesti)  );
+    // int  aTest[ 10 ] = { 8, 1, 5, 3, 4, 6, 9, 7, 2, 0 };
+    // int aTestq[ 10 ] = { 6, 4, 3, 5, 1, 8, 0, 2, 7, 9 };
+    // int aTestw[ 10 ] = { 7, 9, 6, 4, 3, 5, 1, 8, 0, 2 };
+    // int aTeste[ 10 ] = { 2, 0, 8, 1, 5, 3, 4, 6, 9, 7 };
+    // int aTestr[ 10 ] = { 1, 8, 0, 2, 7, 9, 6, 4, 3, 5 };
+    // int aTestt[ 10 ] = { 3, 4, 6, 9, 7, 2, 0, 8, 1, 5 };
+    // int aTesty[ 10 ] = { 8, 1, 5, 3, 4, 6, 9, 7, 2, 0 };
+    // int aTestu[ 10 ] = { 4, 6, 9, 7, 2, 0, 8, 1, 5, 3 };
+    // int aTesti[ 10 ] = { 8, 0, 2, 7, 9, 6, 4, 3, 5, 1 };
+    // printf(" %d \n", calculateLength(aTest ) );
+    // printf(" %d \n", calculateLength(aTestq)  );
+    // printf(" %d \n", calculateLength(aTestw)  );
+    // printf(" %d \n", calculateLength(aTeste)  );
+    // printf(" %d \n", calculateLength(aTestr)  );
+    // printf(" %d \n", calculateLength(aTestt)  );
+    // printf(" %d \n", calculateLength(aTesty)  );
+    // printf(" %d \n", calculateLength(aTestu)  );
+    // printf(" %d \n", calculateLength(aTesti)  );
     
 
 
 
 
 
-    // initiatePopulation( &population);
+    initiatePopulation( &population);
 
-    // for (int i = 0; i < 1000; i++)
-    // {
-    //        evaluateFitnessAndProbability( *(population.currentGeneration), 0 );
+    for (int i = 0; i < 100; i++)
+    {
+           evaluateFitnessAndProbability( *(population.currentGeneration), 0 );
 
-    // newGeneration( &population);
+         newGeneration( &population);
 
-    // }
+    }
     
 
 
-    // // printf("            @@ ANSWER %f \n", rand()/(double)RAND_MAX);
-    // printf("         SHORTEST PATH: ");
-    // printChromossome(ANSWER);
+    // printf("            @@ ANSWER %f \n", rand()/(double)RAND_MAX);
+    printf("         SHORTEST PATH: ");
+    printChromossome(ANSWER);
+    
+    
+    printf(" %d \n", calculateLength(ANSWER->path)  );
+    
 
-    // freeMemory(&population);
-    // free(ANSWER);
+
+    freeMemory(&population);
+    free(ANSWER);
 
 
     return 0;
