@@ -8,13 +8,13 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<time.h>
-
+#define true 1
+#define false 0
 //chromossome has only 10 but fitness adds return
 typedef struct  chromossome  {
 
 int path[10];
-long double fitness;
-long double probability;
+int fitness;
 int length;
 
 struct chromossome* next;
@@ -24,6 +24,7 @@ int chromossomeKey;
 typedef struct population{
     struct chromossome** currentGeneration;
     int populationSize;
+    int fitnessSum;
 }population;
 
 
@@ -50,7 +51,7 @@ void initiatePopulation(population *start);
 
 //calculates specific fitness relative to the sum of all path lengths
 //recursive, sum on the way, fitness on the back (specific/total length)
-// int evaluateFitnessAndProbability(chromossome* path, int fitnessSum);
+// int evaluateFitness(chromossome* path, int fitnessSum);
 
 // prints chromossome as a path between cities
 void printPath(chromossome* path);
@@ -81,7 +82,7 @@ chromossome* ANSWER = NULL;
         void printChromossome (chromossome* chromossome) {
 
             printArray( chromossome->path );
-            printf(" key:%d fitness:%Lf length:%d probability: %Lf \n", chromossome->chromossomeKey,chromossome->fitness, chromossome->length, chromossome->probability);
+            printf(" key:%d fitness:%d length:%d \n", chromossome->chromossomeKey,chromossome->fitness, chromossome->length);
 
         }
 
@@ -121,7 +122,6 @@ void setStandardChromossome(chromossome* chromossome, int key);
 void setStandardChromossome(chromossome* chromossome, int key){
 
                 chromossome->fitness = 0;
-                chromossome->probability = 0;
                 chromossome->length = 0;
                 chromossome->chromossomeKey = key;
 
@@ -189,20 +189,18 @@ void initiatePopulation (population *start){
 //Reads chromossome->path, seeks data on distances matrix and sums path distance
 // sets individuals fitness ( 1/length ) on the way to the last chromossome
 // sets idividual probability on the way back
-long double evaluateFitnessAndProbability(chromossome* chromossome, long double fitnessSum );
-long double evaluateFitnessAndProbability(chromossome* chromossome, long double fitnessSum ){
+int evaluateFitness(chromossome* chromossome, int fitnessSum );
+int evaluateFitness(chromossome* chromossome, int fitnessSum ){
 
     if (chromossome != NULL){
 
         chromossome->length = calculateLength( chromossome->path );       
 
-        chromossome->fitness = 10000 /chromossome->length ;
+        chromossome->fitness = 1000000 /chromossome->length ;
         fitnessSum += chromossome->fitness;
 
-        fitnessSum = evaluateFitnessAndProbability( chromossome->next, fitnessSum );
+        fitnessSum = evaluateFitness( chromossome->next, fitnessSum );
 
-       if (fitnessSum != 0)
-            chromossome->probability = chromossome->fitness / fitnessSum;
 
 //chromossome is marked as answer if it's the smallest one
         if ( chromossome->length < ANSWER->length || ANSWER->length == 0) {
@@ -210,7 +208,7 @@ long double evaluateFitnessAndProbability(chromossome* chromossome, long double 
             *ANSWER = *chromossome;
 
         }
-        printf(">>Evaluated fitness/probability of:\n");
+        printf(">>Evaluated fitness of:\n");
         printChromossome(chromossome);
     }
 
@@ -341,24 +339,47 @@ void  rehabilitation( population* population ){
 
 }
 
-long double setProbabilityWheel( chromossome** chromossome, long double probabilitySum);
-long double setProbabilityWheel( chromossome** chromossome, long double probabilitySum){
+int setProbabilityWheel( chromossome** chromossome, int probabilitySum);
+int setProbabilityWheel( chromossome** chromossome, int probabilitySum){
     probabilitySum = 0;
 
     if ( *chromossome != NULL){
         probabilitySum = setProbabilityWheel( &(*chromossome)->next, probabilitySum);
-        probabilitySum += (*chromossome)->probability;
-        (*chromossome)->probability = probabilitySum ;
+        probabilitySum += (*chromossome)->fitness;
+        (*chromossome)->fitness = probabilitySum ;
     }
 
     return probabilitySum ;
 }
 
+chromossome** searchByFitness( chromossome* head, int fitness, int wheel){
 
-chromossome* fitnessProportionateSelection( chromossome** generationHead){
-    chromossome** aux;
+    while ( head->fitness >= fitness)
+    {
+        if ( head->next != NULL && head->fitness > fitness)
+        head = head->next;
+    }
+ return &head;
+}
+
+chromossome* fitnessProportionateCrossover( chromossome** generationHead, int fitnessSum){
+    chromossome** parentOne;
+    chromossome** parentTwo;
+    chromossome* childOne;
+    chromossome* childTwo;
+    int index = randomInt( 1, 9);
 
     int wheel = setProbabilityWheel( generationHead, 0);
+
+    parentOne = searchByFitness( generationHead, randomInt(0, wheel), wheel);
+    parentTwo = searchByFitness( generationHead, randomInt(0, wheel), wheel);
+
+    copyPath( childOne, parentOne, 0, index);
+    copyPath( childTwo, parentTwo, 0, index);
+
+    copyPath( childOne, parentOne, index, 9);
+    copyPath( childTwo, parentTwo, index, 9);
+
 
     return generationHead;
 
@@ -372,7 +393,7 @@ void newGeneration( population* population){
     aux = population->currentGeneration;
     chromossome** nextGeneration;
       
-       fitnessProportionateSelection( aux );
+       fitnessProportionateCrossover( aux, population->fitnessSum );
 
 
 
@@ -454,7 +475,7 @@ int main ()
 
     for (int i = 0; i < 1000; i++)
     {
-        evaluateFitnessAndProbability( *(population.currentGeneration), 0 );
+        population.fitnessSum = evaluateFitness( *(population.currentGeneration), 0 );
 
         newGeneration( &population);
 
