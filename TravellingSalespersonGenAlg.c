@@ -189,15 +189,14 @@ void initiatePopulation (population *start){
 //Reads chromossome->path, seeks data on distances matrix and sums path distance
 // sets individuals fitness ( 1/length ) on the way to the last chromossome
 // sets idividual probability on the way back
-long double evaluateFitnessAndProbability(chromossome* chromossome, long double fitnessSum);
-long double evaluateFitnessAndProbability(chromossome* chromossome, long double fitnessSum){
+long double evaluateFitnessAndProbability(chromossome* chromossome, long double fitnessSum );
+long double evaluateFitnessAndProbability(chromossome* chromossome, long double fitnessSum ){
 
-printf(">>Evaluating fitness/probability of:\n");
     if (chromossome != NULL){
 
         chromossome->length = calculateLength( chromossome->path );       
 
-        chromossome->fitness = 1000 /chromossome->length ;
+        chromossome->fitness = 10000 /chromossome->length ;
         fitnessSum += chromossome->fitness;
 
         fitnessSum = evaluateFitnessAndProbability( chromossome->next, fitnessSum );
@@ -211,7 +210,7 @@ printf(">>Evaluating fitness/probability of:\n");
             *ANSWER = *chromossome;
 
         }
-
+        printf(">>Evaluated fitness/probability of:\n");
         printChromossome(chromossome);
     }
 
@@ -256,8 +255,11 @@ void crossover(chromossome* parent1, chromossome* parent2);
 void crossover(chromossome* parent1, chromossome* parent2){
 
 }
+
 //first a very varied breeding, then selected
 // mutates chromossome according to option
+// since the first city must be counted twice in the path, 
+// a paticular option is given to check wether it'd be bes
 void mutation( chromossome** chromossome,int opt);
 void mutation( chromossome** chromossome,int opt){
     int indexA, indexB;
@@ -304,7 +306,6 @@ void mutation( chromossome** chromossome,int opt){
 void  rehabilitation( population* population );
 void  rehabilitation( population* population ){
 
-
     chromossome** aux = population->currentGeneration;
     chromossome* keepInLine;
 
@@ -340,16 +341,41 @@ void  rehabilitation( population* population ){
 
 }
 
+long double setProbabilityWheel( chromossome** chromossome, long double probabilitySum);
+long double setProbabilityWheel( chromossome** chromossome, long double probabilitySum){
+    probabilitySum = 0;
+
+    if ( *chromossome != NULL){
+        probabilitySum = setProbabilityWheel( &(*chromossome)->next, probabilitySum);
+        probabilitySum += (*chromossome)->probability;
+        (*chromossome)->probability = probabilitySum ;
+    }
+
+    return probabilitySum ;
+}
+
+
+chromossome* fitnessProportionateSelection( chromossome** generationHead){
+    chromossome** aux;
+
+    int wheel = setProbabilityWheel( generationHead, 0);
+
+    return generationHead;
+
+}
+
+void selectByProbability();
+
 void newGeneration( population* population);
 void newGeneration( population* population){
     chromossome** aux;
     aux = population->currentGeneration;
+    chromossome** nextGeneration;
+      
+       fitnessProportionateSelection( aux );
 
-    rehabilitation( population );
-    // turns remarkably undesirable idivuduals into mutated copies of ANSWER
 
-//sets fitness and probability
-    evaluateFitnessAndProbability( *population->currentGeneration, 0 );
+
     // setProbabilities( population);
     
     for (int i = 0; i < population->populationSize / 2; i++)
@@ -357,8 +383,15 @@ void newGeneration( population* population){
         mutation( aux, randomInt(0,4));
         aux = &(*aux)->next;
     }
+
+    // for ( i = 0; i < population->populationSize; i++)
+    // {
+    //     /* code */
+    // }
     
 
+    // turns remarkably undesirable idivuduals into mutated copies of ANSWER    
+        rehabilitation( population );
 
 }
 
@@ -386,8 +419,8 @@ int main ()
 {
     population population;
     allocateCromossome( &ANSWER );
-
-    population.populationSize = 10;
+  
+    population.populationSize = 20;
     // population.populationSize = 79999;
 // for (int i = 0; i < 10; i++)
 // {                            //FOR BRUTE RANDOM ASSESSING
@@ -414,22 +447,18 @@ int main ()
     // printf(" %d \n", calculateLength(aTesty)  );
     // printf(" %d \n", calculateLength(aTestu)  );
     // printf(" %d \n", calculateLength(aTesti)  );
-    
-
-
-
 
 
     initiatePopulation( &population);
 
-    for (int i = 0; i < 100; i++)
-    {
-           evaluateFitnessAndProbability( *(population.currentGeneration), 0 );
 
-         newGeneration( &population);
+    for (int i = 0; i < 1000; i++)
+    {
+        evaluateFitnessAndProbability( *(population.currentGeneration), 0 );
+
+        newGeneration( &population);
 
     }
-    
 
 
     // printf("            @@ ANSWER %f \n", rand()/(double)RAND_MAX);
@@ -437,7 +466,7 @@ int main ()
     printChromossome(ANSWER);
     
     
-    printf(" %d \n", calculateLength(ANSWER->path)  );
+    printf(" %d KM \n", calculateLength(ANSWER->path) *100  );
     
 
 
