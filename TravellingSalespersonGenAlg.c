@@ -1,15 +1,11 @@
-/*where ANSWER IS, ONLY PATH & KEY, NO PROB/FIT
-    CHECK ETHER ACCES TO TRUE ANSWER I MANTAINED THROUGH
-    GENERATIONS AS ORIGINAL CHROMOSSOME DIES AND A COPY REMAINS ON ANSWER
-    check values OF 2NDGEN ON RECURSIVE FNCTN
+/* Projeto 1(IIA-UnB), 22/09/2020
+    Regina Emy Da nóbrega Kamada,190037351*/
 
-*/
 
 #include<stdlib.h>
 #include<stdio.h>
 #include<time.h>
-#define true 1
-#define false 0
+
 //chromossome has only 10 but fitness adds return
 typedef struct  chromossome  {
 
@@ -352,21 +348,53 @@ int setProbabilityWheel( chromossome** chromossome, int probabilitySum){
     return probabilitySum ;
 }
 
-chromossome** searchByFitness( chromossome* head, int fitness, int wheel){
+chromossome** searchByFitness( chromossome** head, int fitness, int wheel){
+    chromossome** aux = head;
 
-    while ( head->fitness >= fitness)
+    while ( (*aux)->fitness >= fitness)
     {
-        if ( head->next != NULL && head->fitness > fitness)
-        head = head->next;
+        if ( (*aux)->next != NULL && (*aux)->fitness > fitness)
+        aux = &(*aux)->next;
     }
- return &head;
+ return aux;
 }
 
-chromossome* fitnessProportionateCrossover( chromossome** generationHead, int fitnessSum){
+int findMissingGene( chromossome* chromossome){
+    int total, i;
+    total = (9 + 1) * (9 + 2) / 2;
+    for (i = 0; i < 9; i++)
+        total -= chromossome->path[i];
+    return total;
+ 
+}
+void correctPath( chromossome* child, chromossome* parent, int index ){
+    int i,j,k;
+    for ( i = 0; i < 10; i++)
+    {
+        for ( j = 0; j < 10; j++)
+        {
+            if (child->path[j] == child->path [i]){
+                child->path[j] = 
+                
+                for ( k = 0; k < 10; k++)
+                {
+                    if ( parent->path[k] == child->path[j]){
+                        
+                    }
+                }
+                
+            }
+        }
+        
+    }
+    
+}
+
+void fitnessProportionateCrossover( chromossome** generationHead, int fitnessSum){
     chromossome** parentOne;
     chromossome** parentTwo;
-    chromossome* childOne;
-    chromossome* childTwo;
+    chromossome childOne;
+    chromossome childTwo;
     int index = randomInt( 1, 9);
 
     int wheel = setProbabilityWheel( generationHead, 0);
@@ -374,14 +402,17 @@ chromossome* fitnessProportionateCrossover( chromossome** generationHead, int fi
     parentOne = searchByFitness( generationHead, randomInt(0, wheel), wheel);
     parentTwo = searchByFitness( generationHead, randomInt(0, wheel), wheel);
 
-    copyPath( childOne, parentOne, 0, index);
-    copyPath( childTwo, parentTwo, 0, index);
+    copyPath( &childOne, (*parentOne), 0, index);
+    copyPath( &childTwo, (*parentTwo), 0, index);
 
-    copyPath( childOne, parentOne, index, 9);
-    copyPath( childTwo, parentTwo, index, 9);
+    copyPath( &childOne, (*parentTwo), index, 9);
+    copyPath( &childTwo, (*parentOne), index, 9);
+    
+    correctPath( &childOne, (*parentOne), index);
+    copyPath( (*parentOne), &childOne, 0, 9);
+    copyPath( (*parentTwo), &childTwo, 0, 9);
 
 
-    return generationHead;
 
 }
 
@@ -393,7 +424,7 @@ void newGeneration( population* population){
     aux = population->currentGeneration;
     chromossome** nextGeneration;
       
-       fitnessProportionateCrossover( aux, population->fitnessSum );
+    fitnessProportionateCrossover( aux, population->fitnessSum );
 
 
 
